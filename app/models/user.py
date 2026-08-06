@@ -7,7 +7,6 @@ class UserRole(str, enum.Enum):
     ADMIN = "ADMIN"
     VENDOR = "VENDOR"
     DRIVER = "DRIVER"
-    USER = "USER"
 
 class UserStatus(str, enum.Enum):
     ACTIVE = "ACTIVE"

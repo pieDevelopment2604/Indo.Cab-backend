@@ -2,7 +2,7 @@ from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
 from app.schemas.user import UserCreate
-from app.core.security import get_password_hash
+from app.core.security import get_password_hash, normalize_phone_number
 
 class UserService:
     @staticmethod
@@ -14,9 +14,14 @@ class UserService:
 
     @staticmethod
     async def get_by_email_or_phone(db: AsyncSession, username: str) -> User | None:
+        normalized_username = normalize_phone_number(username) if username and "@" not in username else username
         result = await db.execute(
             select(User).where(
-                or_(User.email == username, User.mobile_number == username),
+                or_(
+                    User.email == username, 
+                    User.mobile_number == username,
+                    User.mobile_number == normalized_username
+                ),
                 User.is_deleted == False
             )
         )
@@ -25,9 +30,10 @@ class UserService:
     @staticmethod
     async def create(db: AsyncSession, user_in: UserCreate) -> User:
         hashed_password = get_password_hash(user_in.password)
+        normalized_mobile = normalize_phone_number(user_in.mobile_number)
         db_user = User(
             email=user_in.email,
-            mobile_number=user_in.mobile_number,
+            mobile_number=normalized_mobile,
             password_hash=hashed_password,
             role=user_in.role,
             first_name=user_in.first_name,
@@ -43,3 +49,10 @@ class UserService:
         db.add(db_user)
         await db.flush()
         return db_user
+
+    @staticmethod
+    async def update_password(db: AsyncSession, user: User, new_password: str) -> User:
+        user.password_hash = get_password_hash(new_password)
+        db.add(user)
+        await db.flush()
+        return user
