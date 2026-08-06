@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Any
 from jose import jwt
@@ -29,3 +30,15 @@ def create_refresh_token(subject: str | Any, expires_delta: timedelta | None = N
         
     to_encode = {"exp": expire, "sub": str(subject), "type": "refresh"}
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm="HS256")
+
+def normalize_phone_number(phone: str) -> str:
+    if not phone:
+        return phone
+    cleaned = re.sub(r"[^\d+]", "", phone.strip())
+    if cleaned.startswith("+"):
+        return cleaned
+    if len(cleaned) == 10:
+        return f"+91{cleaned}"
+    if len(cleaned) == 12 and cleaned.startswith("91"):
+        return f"+{cleaned}"
+    return f"+{cleaned}"
