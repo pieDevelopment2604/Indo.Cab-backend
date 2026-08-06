@@ -1,0 +1,54 @@
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+
+# MCP & Agent Configs
+mcp_config.json
+.agents/
+
+# Documentation
+docs/
+
+# Seed Scripts & Tools (Excluded per request)
+scripts/
+
+# Alembic Templates (Excluded per request)
+alembic/script.py.mako
+
+# Celery Beat Runtime Database Files
+celerybeat-schedule*
+*.shm
+*.wal
+
+# Python Bytecode & Caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# IDEs and Editors
+.idea/
+*.swp
+*.swo
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Project Uploads (Local storage)
+app/uploads/*
+!app/uploads/.gitkeep
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat
+.gitignore
