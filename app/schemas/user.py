@@ -20,6 +20,22 @@ class UserCreate(UserBase):
     operating_cities: list[str] | None = None
     license_number: str | None = None
 
+class VendorCreate(UserBase):
+    password: str = Field(..., min_length=6, max_length=100)
+    company_name: str = Field(..., max_length=255)
+    gst_number: str | None = None
+    pan_number: str | None = None
+    address: str | None = None
+    operating_cities: list[str] | None = None
+
+class DriverCreate(UserBase):
+    password: str = Field(..., min_length=6, max_length=100)
+    license_number: str = Field(..., max_length=50)
+    vendor_id: int = Field(..., description="ID of the vendor owning the fleet")
+
+class UserStatusUpdate(BaseModel):
+    status: UserStatus
+
 class UserResponse(UserBase):
     model_config = ConfigDict(from_attributes=True)
 

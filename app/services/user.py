@@ -1,6 +1,6 @@
 from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.user import User
+from app.models.user import User, UserRole, UserStatus
 from app.schemas.user import UserCreate
 from app.core.security import get_password_hash, normalize_phone_number
 
@@ -56,3 +56,72 @@ class UserService:
         db.add(user)
         await db.flush()
         return user
+
+    @staticmethod
+    async def update_status(db: AsyncSession, user: User, status: UserStatus) -> User:
+        user.status = status
+        db.add(user)
+        await db.flush()
+        return user
+
+    @staticmethod
+    async def list_vendors(
+        db: AsyncSession, 
+        status: UserStatus | None = None,
+        search: str | None = None,
+        skip: int = 0, 
+        limit: int = 100
+    ) -> list[User]:
+        stmt = select(User).where(User.role == UserRole.VENDOR, User.is_deleted == False)
+        
+        if status:
+            stmt = stmt.where(User.status == status)
+            
+        if search:
+            search_pattern = f"%{search}%"
+            stmt = stmt.where(
+                or_(
+                    User.company_name.ilike(search_pattern),
+                    User.first_name.ilike(search_pattern),
+                    User.last_name.ilike(search_pattern),
+                    User.email.ilike(search_pattern),
+                    User.mobile_number.ilike(search_pattern)
+                )
+            )
+            
+        stmt = stmt.offset(skip).limit(limit)
+        result = await db.execute(stmt)
+        return list(result.scalars().all())
+
+    @staticmethod
+    async def list_drivers(
+        db: AsyncSession, 
+        vendor_id: int | None = None,
+        status: UserStatus | None = None,
+        search: str | None = None,
+        skip: int = 0, 
+        limit: int = 100
+    ) -> list[User]:
+        stmt = select(User).where(User.role == UserRole.DRIVER, User.is_deleted == False)
+        
+        if status:
+            stmt = stmt.where(User.status == status)
+
+        if vendor_id:
+            # Match drivers associated with a specific vendor
+            stmt = stmt.where(User.created_by == vendor_id)
+            
+        if search:
+            search_pattern = f"%{search}%"
+            stmt = stmt.where(
+                or_(
+                    User.first_name.ilike(search_pattern),
+                    User.last_name.ilike(search_pattern),
+                    User.license_number.ilike(search_pattern),
+                    User.mobile_number.ilike(search_pattern)
+                )
+            )
+            
+        stmt = stmt.offset(skip).limit(limit)
+        result = await db.execute(stmt)
+        return list(result.scalars().all())
