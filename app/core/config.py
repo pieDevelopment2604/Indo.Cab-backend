@@ -25,7 +25,13 @@ class Settings(BaseSettings):
     @classmethod
     def assemble_db_connection(cls, v: str | None, info) -> str:
         if isinstance(v, str) and v:
+            # Railway and Heroku provide postgresql:// by default, but we need asyncpg
+            if v.startswith("postgres://"):
+                return v.replace("postgres://", "postgresql+asyncpg://", 1)
+            if v.startswith("postgresql://"):
+                return v.replace("postgresql://", "postgresql+asyncpg://", 1)
             return v
+        
         data = info.data
         return (
             f"postgresql+asyncpg://{data.get('POSTGRES_USER')}:"
