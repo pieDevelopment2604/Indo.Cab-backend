@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
-from app.models.user import User
-from app.routes.dependencies import get_current_user, role_required
+from app.models.user import User, UserRole
+from app.routes.dependencies import get_current_user, RoleChecker
 from app.schemas.fleet import VehicleCreate, VehicleUpdateStatus, VehicleResponse
 from app.services.fleet import FleetService
 
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/fleet/vehicles", tags=["Fleet"])
 async def create_vehicle(
     vehicle_in: VehicleCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(role_required(["ADMIN", "VENDOR"]))
+    current_user: User = Depends(RoleChecker([UserRole.ADMIN, UserRole.VENDOR]))
 ):
     """
     Create a new vehicle. 
@@ -30,7 +30,7 @@ async def create_vehicle(
 async def list_vehicles(
     owner_id: Optional[int] = None,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(role_required(["ADMIN", "VENDOR"]))
+    current_user: User = Depends(RoleChecker([UserRole.ADMIN, UserRole.VENDOR]))
 ):
     """
     List vehicles.
@@ -45,7 +45,7 @@ async def list_vehicles(
 async def get_vehicle(
     vehicle_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(role_required(["ADMIN", "VENDOR"]))
+    current_user: User = Depends(RoleChecker([UserRole.ADMIN, UserRole.VENDOR]))
 ):
     """
     Get vehicle details.
@@ -60,7 +60,7 @@ async def update_vehicle_status(
     vehicle_id: UUID,
     status_in: VehicleUpdateStatus,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(role_required(["ADMIN"]))
+    current_user: User = Depends(RoleChecker([UserRole.ADMIN]))
 ):
     """
     Update vehicle status (Approve, Reject, Suspend, etc.).

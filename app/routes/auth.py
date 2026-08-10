@@ -20,7 +20,7 @@ from app.services.user import UserService
 from app.services.redis import RedisService
 from app.services.recaptcha import RecaptchaService
 from app.routes.dependencies import get_current_user
-from app.models.user import User
+from app.models.user import User, UserRole
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 

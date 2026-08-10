@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
-from app.models.user import User
-from app.routes.dependencies import role_required
+from app.models.user import User, UserRole
+from app.routes.dependencies import RoleChecker
 from app.schemas.pricing import PricingZoneCreate, PricingZoneResponse, RateCardCreate, RateCardResponse
 from app.services.pricing import PricingService
 
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/pricing", tags=["Pricing"])
 async def create_pricing_zone(
     zone_in: PricingZoneCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(role_required(["ADMIN"]))
+    current_user: User = Depends(RoleChecker([UserRole.ADMIN]))
 ):
     """
     Create a new pricing zone. Admins only.
@@ -25,7 +25,7 @@ async def create_pricing_zone(
 @router.get("/zones", response_model=List[PricingZoneResponse])
 async def list_pricing_zones(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(role_required(["ADMIN"]))
+    current_user: User = Depends(RoleChecker([UserRole.ADMIN]))
 ):
     """
     List all pricing zones.
@@ -36,7 +36,7 @@ async def list_pricing_zones(
 async def create_rate_card(
     rate_card_in: RateCardCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(role_required(["ADMIN"]))
+    current_user: User = Depends(RoleChecker([UserRole.ADMIN]))
 ):
     """
     Create a new rate card. Admins only.
@@ -47,7 +47,7 @@ async def create_rate_card(
 async def list_rate_cards(
     zone_id: Optional[UUID] = None,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(role_required(["ADMIN"]))
+    current_user: User = Depends(RoleChecker([UserRole.ADMIN]))
 ):
     """
     List all rate cards, optionally filtered by zone.

@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.document import DocumentEntity
-from app.routes.dependencies import get_current_user, role_required
+from app.routes.dependencies import get_current_user, RoleChecker
 from app.schemas.documents import DocumentUpload, DocumentUpdateStatus, DocumentResponse
 from app.services.documents import DocumentService
 
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/documents", tags=["Documents"])
 async def upload_document(
     doc_in: DocumentUpload,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(role_required(["ADMIN", "VENDOR", "DRIVER"]))
+    current_user: User = Depends(RoleChecker([UserRole.ADMIN, UserRole.VENDOR, UserRole.DRIVER]))
 ):
     """
     Upload a document for a USER or VEHICLE entity.
@@ -40,7 +40,7 @@ async def list_documents(
     entity_type: Optional[DocumentEntity] = None,
     entity_id: Optional[UUID] = None,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(role_required(["ADMIN"]))
+    current_user: User = Depends(RoleChecker([UserRole.ADMIN]))
 ):
     """
     List documents. Only Admins can view the document queue broadly.
@@ -52,7 +52,7 @@ async def update_document_status(
     document_id: UUID,
     status_in: DocumentUpdateStatus,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(role_required(["ADMIN"]))
+    current_user: User = Depends(RoleChecker([UserRole.ADMIN]))
 ):
     """
     Approve or Reject a document.

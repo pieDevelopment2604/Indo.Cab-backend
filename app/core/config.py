@@ -41,6 +41,15 @@ class Settings(BaseSettings):
 
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
+    REDIS_URL: str | None = None
+
+    @field_validator("REDIS_URL", mode="before")
+    @classmethod
+    def assemble_redis_url(cls, v: str | None, info) -> str:
+        if isinstance(v, str) and v:
+            return v
+        data = info.data
+        return f"redis://{data.get('REDIS_HOST')}:{data.get('REDIS_PORT')}/0"
 
     CELERY_BROKER_URL: str | None = None
     CELERY_RESULT_BACKEND: str | None = None
@@ -51,7 +60,7 @@ class Settings(BaseSettings):
         if isinstance(v, str) and v:
             return v
         data = info.data
-        return f"redis://{data.get('REDIS_HOST')}:{data.get('REDIS_PORT')}/0"
+        return data.get('REDIS_URL', f"redis://{data.get('REDIS_HOST')}:{data.get('REDIS_PORT')}/0")
 
     @field_validator("CELERY_RESULT_BACKEND", mode="before")
     @classmethod
@@ -59,7 +68,7 @@ class Settings(BaseSettings):
         if isinstance(v, str) and v:
             return v
         data = info.data
-        return f"redis://{data.get('REDIS_HOST')}:{data.get('REDIS_PORT')}/0"
+        return data.get('REDIS_URL', f"redis://{data.get('REDIS_HOST')}:{data.get('REDIS_PORT')}/0")
 
     # MSG91 SMS Gateway
     MSG91_AUTH_KEY: str | None = None

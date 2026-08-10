@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.escalation import EscalationStatus
-from app.routes.dependencies import role_required
+from app.routes.dependencies import RoleChecker
 from app.schemas.escalations import EscalationCreate, EscalationUpdateStatus, EscalationResponse
 from app.services.escalations import EscalationService
 
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/escalations", tags=["Escalations"])
 async def create_escalation(
     escalation_in: EscalationCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(role_required(["ADMIN", "USER", "VENDOR", "DRIVER"]))
+    current_user: User = Depends(RoleChecker([UserRole.ADMIN, UserRole.VENDOR, UserRole.DRIVER]))
 ):
     """
     Create a new escalation ticket.
@@ -27,7 +27,7 @@ async def create_escalation(
 async def list_escalations(
     status_filter: Optional[EscalationStatus] = None,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(role_required(["ADMIN"]))
+    current_user: User = Depends(RoleChecker([UserRole.ADMIN]))
 ):
     """
     List all escalations.
@@ -38,7 +38,7 @@ async def list_escalations(
 async def get_escalation(
     escalation_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(role_required(["ADMIN"]))
+    current_user: User = Depends(RoleChecker([UserRole.ADMIN]))
 ):
     """
     Get a specific escalation.
@@ -50,7 +50,7 @@ async def update_escalation_status(
     escalation_id: UUID,
     status_in: EscalationUpdateStatus,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(role_required(["ADMIN"]))
+    current_user: User = Depends(RoleChecker([UserRole.ADMIN]))
 ):
     """
     Update the status of an escalation ticket.

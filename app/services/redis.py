@@ -4,8 +4,9 @@ from app.core.config import settings
 REFRESH_TOKEN_TTL_SECONDS = settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
 
 def get_redis_client():
+    url = settings.REDIS_URL or f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/0"
     return aioredis.from_url(
-        f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/0",
+        url,
         decode_responses=True
     )
 
