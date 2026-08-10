@@ -7,7 +7,7 @@ async def test_admin_create_vendor(client: AsyncClient):
     # 1. Login as Admin
     login_res = await client.post(
         "/api/v1/auth/login",
-        json={"username": "admin1@indocab.com", "password": "password123"}
+        json={"username": "admin1@indocab.com", "password": "password123", "recaptcha_token": "mock_token"}
     )
     assert login_res.status_code == 200
     token = login_res.json()["access_token"]
@@ -43,7 +43,7 @@ async def test_admin_list_and_get_vendors(client: AsyncClient):
     # 1. Login as Admin
     login_res = await client.post(
         "/api/v1/auth/login",
-        json={"username": "admin1@indocab.com", "password": "password123"}
+        json={"username": "admin1@indocab.com", "password": "password123", "recaptcha_token": "mock_token"}
     )
     assert login_res.status_code == 200
     token = login_res.json()["access_token"]
@@ -74,7 +74,7 @@ async def test_admin_create_and_list_drivers(client: AsyncClient):
     # 1. Login as Admin
     login_res = await client.post(
         "/api/v1/auth/login",
-        json={"username": "admin1@indocab.com", "password": "password123"}
+        json={"username": "admin1@indocab.com", "password": "password123", "recaptcha_token": "mock_token"}
     )
     assert login_res.status_code == 200
     token = login_res.json()["access_token"]
@@ -130,7 +130,7 @@ async def test_admin_update_user_status(client: AsyncClient):
     # 1. Login as Admin
     login_res = await client.post(
         "/api/v1/auth/login",
-        json={"username": "admin1@indocab.com", "password": "password123"}
+        json={"username": "admin1@indocab.com", "password": "password123", "recaptcha_token": "mock_token"}
     )
     assert login_res.status_code == 200
     token = login_res.json()["access_token"]
@@ -165,7 +165,7 @@ async def test_admin_add_and_list_clients(client: AsyncClient):
     # 1. Login as Admin
     login_res = await client.post(
         "/api/v1/auth/login",
-        json={"username": "admin1@indocab.com", "password": "password123"}
+        json={"username": "admin1@indocab.com", "password": "password123", "recaptcha_token": "mock_token"}
     )
     assert login_res.status_code == 200
     token = login_res.json()["access_token"]

@@ -4,7 +4,9 @@ from app.models.client import Client
 from app.schemas.client import ClientCreate
 from app.core.security import normalize_phone_number
 
+
 class ClientService:
+
     @staticmethod
     async def get_by_id(db: AsyncSession, client_id: int) -> Client | None:
         result = await db.execute(
@@ -13,22 +15,30 @@ class ClientService:
         return result.scalar_one_or_none()
 
     @staticmethod
-    async def get_by_email_or_phone(db: AsyncSession, mobile_number: str, email: str | None = None) -> Client | None:
+    async def get_by_email_or_phone(
+        db: AsyncSession, mobile_number: str, email: str | None = None
+    ) -> Client | None:
         normalized_phone = normalize_phone_number(mobile_number)
+
+        # Check by phone first
         stmt = select(Client).where(
             (Client.mobile_number == normalized_phone) | (Client.mobile_number == mobile_number),
-            Client.is_deleted == False
+            Client.is_deleted == False,
         )
         if email:
+            # Widen search to also match email
             stmt = select(Client).where(
                 (Client.email == email) | (Client.mobile_number == normalized_phone),
-                Client.is_deleted == False
+                Client.is_deleted == False,
             )
+
         result = await db.execute(stmt)
         return result.scalar_one_or_none()
 
     @staticmethod
-    async def create(db: AsyncSession, client_in: ClientCreate) -> Client:
+    async def create(
+        db: AsyncSession, client_in: ClientCreate, created_by_id: int | None = None
+    ) -> Client:
         normalized_phone = normalize_phone_number(client_in.mobile_number)
         db_client = Client(
             company_name=client_in.company_name,
@@ -39,7 +49,8 @@ class ClientService:
             pan_number=client_in.pan_number,
             address=client_in.address,
             operating_cities=client_in.operating_cities,
-            discount_percentage=client_in.discount_percentage
+            discount_percentage=client_in.discount_percentage,
+            created_by=created_by_id,  # Audit: admin who created this record
         )
         db.add(db_client)
         await db.flush()
