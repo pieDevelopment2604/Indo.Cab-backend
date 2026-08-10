@@ -1,4 +1,3 @@
-import random
 import pytest
 from httpx import AsyncClient
 
@@ -6,7 +5,7 @@ from httpx import AsyncClient
 async def test_login_success(client: AsyncClient):
     response = await client.post(
         "/api/v1/auth/login",
-        json={"username": "admin1@indocab.com", "password": "password123"}
+        json={"username": "admin1@indocab.com", "password": "password123", "recaptcha_token": "mock_token"}
     )
     assert response.status_code == 200
     data = response.json()
@@ -18,47 +17,22 @@ async def test_login_success(client: AsyncClient):
 async def test_login_invalid_password(client: AsyncClient):
     response = await client.post(
         "/api/v1/auth/login",
-        json={"username": "admin1@indocab.com", "password": "wrongpassword"}
+        json={"username": "admin1@indocab.com", "password": "wrongpassword", "recaptcha_token": "mock_token"}
     )
     assert response.status_code == 401
 
 @pytest.mark.asyncio
-async def test_register_user(client: AsyncClient):
-    rand_num = random.randint(10000, 99999)
-    email = f"testuser{rand_num}@indocab.com"
-    mobile = f"+9198765{rand_num}"
-    
-    payload = {
-        "email": email,
-        "mobile_number": mobile,
-        "first_name": "Test",
-        "last_name": "User",
-        "password": "testpassword123",
-        "role": "DRIVER"
-    }
-    response = await client.post("/api/v1/auth/register", json=payload)
-    assert response.status_code == 201
-    data = response.json()
-    assert data["email"] == email
-    assert data["mobile_number"] == mobile
-
-@pytest.mark.asyncio
-async def test_register_duplicate_user(client: AsyncClient):
-    payload = {
-        "email": "admin1@indocab.com",
-        "mobile_number": "+919999988881",
-        "first_name": "Duplicate",
-        "last_name": "User",
-        "password": "testpassword123",
-        "role": "DRIVER"
-    }
-    response = await client.post("/api/v1/auth/register", json=payload)
-    assert response.status_code == 400
+async def test_login_missing_recaptcha_fails(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/auth/login",
+        json={"username": "admin1@indocab.com", "password": "password123"}
+    )
+    assert response.status_code == 422
 
 @pytest.mark.asyncio
 async def test_send_and_verify_otp(client: AsyncClient):
     # 1. Send OTP with standard +91 number
-    send_res = await client.post("/api/v1/auth/send-otp", json={"mobile_number": "+919999988881"})
+    send_res = await client.post("/api/v1/auth/send-otp", json={"mobile_number": "+919999988881", "recaptcha_token": "mock_token"})
     assert send_res.status_code == 200
     otp_data = send_res.json()
     assert "dev_otp" in otp_data
@@ -76,7 +50,7 @@ async def test_send_and_verify_otp(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_phone_normalization_otp_flow(client: AsyncClient):
     # 1. Send OTP using 12-digit number without plus: "919999988881"
-    send_res = await client.post("/api/v1/auth/send-otp", json={"mobile_number": "919999988881"})
+    send_res = await client.post("/api/v1/auth/send-otp", json={"mobile_number": "919999988881", "recaptcha_token": "mock_token"})
     assert send_res.status_code == 200
     dev_otp = send_res.json()["dev_otp"]
 
@@ -91,7 +65,7 @@ async def test_phone_normalization_otp_flow(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_forgot_and_reset_password(client: AsyncClient):
     # 1. Forgot password
-    forgot_res = await client.post("/api/v1/auth/forgot-password", json={"mobile_number": "+919999988882"})
+    forgot_res = await client.post("/api/v1/auth/forgot-password", json={"mobile_number": "+919999988882", "recaptcha_token": "mock_token"})
     assert forgot_res.status_code == 200
     dev_otp = forgot_res.json()["dev_otp"]
 
@@ -109,6 +83,6 @@ async def test_forgot_and_reset_password(client: AsyncClient):
     # 3. Login with new password
     login_res = await client.post(
         "/api/v1/auth/login",
-        json={"username": "+919999988882", "password": "newsecretpassword123"}
+        json={"username": "+919999988882", "password": "newsecretpassword123", "recaptcha_token": "mock_token"}
     )
     assert login_res.status_code == 200

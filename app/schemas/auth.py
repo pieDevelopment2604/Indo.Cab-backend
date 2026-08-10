@@ -8,12 +8,14 @@ class TokenResponse(BaseModel):
 class LoginCredentials(BaseModel):
     username: str = Field(..., description="Email or Mobile Number")
     password: str
+    recaptcha_token: str = Field(..., description="Google reCAPTCHA v3 token (Mandatory)")
 
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
 class SendOTPRequest(BaseModel):
     mobile_number: str = Field(..., max_length=15)
+    recaptcha_token: str = Field(..., description="Google reCAPTCHA v3 token (Mandatory)")
 
 class VerifyOTPRequest(BaseModel):
     mobile_number: str = Field(..., max_length=15)
