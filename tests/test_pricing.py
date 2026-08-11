@@ -7,7 +7,7 @@ async def test_create_pricing_zone(client: AsyncClient):
         "/api/v1/auth/login",
         json={"username": "admin1@indocab.com", "password": "password123", "recaptcha_token": "test_token"}
     )
-    token = login_res.json()["access_token"]
+    token = login_res.json()["token"]
 
     zone_payload = {
         "name": "Mumbai Metropolitan",

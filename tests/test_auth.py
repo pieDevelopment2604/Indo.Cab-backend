@@ -9,7 +9,7 @@ async def test_login_success(client: AsyncClient):
     )
     assert response.status_code == 200
     data = response.json()
-    assert "access_token" in data
+    assert "token" in data
     assert "refresh_token" in data
     assert data["token_type"] == "bearer"
 
@@ -45,7 +45,7 @@ async def test_send_and_verify_otp(client: AsyncClient):
     )
     assert verify_res.status_code == 200
     token_data = verify_res.json()
-    assert "access_token" in token_data
+    assert "token" in token_data
 
 @pytest.mark.asyncio
 async def test_phone_normalization_otp_flow(client: AsyncClient):
@@ -60,7 +60,7 @@ async def test_phone_normalization_otp_flow(client: AsyncClient):
         json={"mobile_number": "9999988881", "otp_code": dev_otp}
     )
     assert verify_res.status_code == 200
-    assert "access_token" in verify_res.json()
+    assert "token" in verify_res.json()
 
 @pytest.mark.asyncio
 async def test_forgot_and_reset_password(client: AsyncClient):

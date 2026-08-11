@@ -5,6 +5,7 @@ from app.db.base_class import Base
 
 
 class UserRole(str, enum.Enum):
+    SUPERADMIN = "SUPERADMIN"
     ADMIN = "ADMIN"
     VENDOR = "VENDOR"
     DRIVER = "DRIVER"

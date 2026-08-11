@@ -10,7 +10,7 @@ async def test_admin_create_vendor(client: AsyncClient):
         json={"username": "admin1@indocab.com", "password": "password123", "recaptcha_token": "mock_token"}
     )
     assert login_res.status_code == 200
-    token = login_res.json()["access_token"]
+    token = login_res.json()["token"]
 
     # 2. Create Vendor
     rand_num = random.randint(10000, 99999)
@@ -46,7 +46,7 @@ async def test_admin_list_and_get_vendors(client: AsyncClient):
         json={"username": "admin1@indocab.com", "password": "password123", "recaptcha_token": "mock_token"}
     )
     assert login_res.status_code == 200
-    token = login_res.json()["access_token"]
+    token = login_res.json()["token"]
 
     # 2. List Vendors
     list_res = await client.get(
@@ -77,7 +77,7 @@ async def test_admin_create_and_list_drivers(client: AsyncClient):
         json={"username": "admin1@indocab.com", "password": "password123", "recaptcha_token": "mock_token"}
     )
     assert login_res.status_code == 200
-    token = login_res.json()["access_token"]
+    token = login_res.json()["token"]
 
     # 2. Get Vendor 1 ID
     vendors_res = await client.get(
@@ -133,7 +133,7 @@ async def test_admin_update_user_status(client: AsyncClient):
         json={"username": "admin1@indocab.com", "password": "password123", "recaptcha_token": "mock_token"}
     )
     assert login_res.status_code == 200
-    token = login_res.json()["access_token"]
+    token = login_res.json()["token"]
 
     # 2. Get first vendor user_id dynamically
     vendors_res = await client.get(
@@ -168,7 +168,7 @@ async def test_admin_add_and_list_clients(client: AsyncClient):
         json={"username": "admin1@indocab.com", "password": "password123", "recaptcha_token": "mock_token"}
     )
     assert login_res.status_code == 200
-    token = login_res.json()["access_token"]
+    token = login_res.json()["token"]
 
     # 2. Add Corporate Client
     rand_num = random.randint(10000, 99999)

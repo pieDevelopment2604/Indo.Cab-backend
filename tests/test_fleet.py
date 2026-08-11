@@ -9,7 +9,7 @@ async def test_create_and_list_vehicles(client: AsyncClient):
         json={"username": "admin1@indocab.com", "password": "password123", "recaptcha_token": "test_token"}
     )
     assert login_res.status_code == 200
-    token = login_res.json()["access_token"]
+    token = login_res.json()["token"]
 
     # 2. Extract user ID from token to use as owner_id
     import jwt
@@ -17,10 +17,12 @@ async def test_create_and_list_vehicles(client: AsyncClient):
     user_id = int(payload["sub"])
 
     # 3. Create Vehicle
+    import random
+    reg_num = f"MH01AB{random.randint(1000,9999)}"
     vehicle_payload = {
         "owner_id": user_id,
         "vehicle_type": "SEDAN",
-        "registration_number": "MH01AB1234",
+        "registration_number": reg_num,
         "brand": "Toyota",
         "model": "Etios",
         "color": "White",
@@ -35,7 +37,7 @@ async def test_create_and_list_vehicles(client: AsyncClient):
     )
     assert res.status_code == 201
     data = res.json()
-    assert data["registration_number"] == "MH01AB1234"
+    assert data["registration_number"] == reg_num
     vehicle_id = data["id"]
 
     # 3. List Vehicles
