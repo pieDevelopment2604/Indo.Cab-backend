@@ -1,9 +1,10 @@
 from pydantic import BaseModel, Field
 
 class TokenResponse(BaseModel):
-    access_token: str
+    token: str
     refresh_token: str
     token_type: str = "bearer"
+    role: str
 
 class LoginCredentials(BaseModel):
     username: str = Field(..., description="Email or Mobile Number")

@@ -63,15 +63,16 @@ async def _send_otp_internal(mobile_number: str) -> dict:
     }
 
 
-async def _build_token_response(user_id: int) -> dict:
+async def _build_token_response(user_id: int, role: str) -> dict:
     """Issue a fresh access + refresh token pair and persist the refresh JTI."""
     access_token = create_access_token(subject=user_id)
     refresh_token, jti = create_refresh_token(subject=user_id)
     await RedisService.store_refresh_token(jti=jti, user_id=user_id)
     return {
-        "access_token": access_token,
+        "token": access_token,
         "refresh_token": refresh_token,
         "token_type": "bearer",
+        "role": role
     }
 
 
@@ -100,11 +101,11 @@ async def login(credentials: LoginCredentials, db: AsyncSession = Depends(get_db
             detail="User account is inactive or suspended",
         )
 
-    return await _build_token_response(user.user_id)
+    return await _build_token_response(user.user_id, user.role.value)
 
 
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh(refresh_data: RefreshTokenRequest):
+async def refresh(refresh_data: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
     """
     Exchange a valid refresh token for a new access + refresh token pair.
     The old refresh token is revoked on use (token rotation).
@@ -137,7 +138,14 @@ async def refresh(refresh_data: RefreshTokenRequest):
     # Revoke the old token before issuing a new pair (rotation)
     await RedisService.revoke_refresh_token(jti)
 
-    return await _build_token_response(int(user_id_str))
+    user = await UserService.get_by_id(db, int(user_id_str))
+    if not user or user.status.value != "ACTIVE":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User account is inactive or suspended",
+        )
+
+    return await _build_token_response(int(user_id_str), user.role.value)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
@@ -197,7 +205,7 @@ async def verify_otp(verify_in: VerifyOTPRequest, db: AsyncSession = Depends(get
         )
 
     await RedisService.delete_otp(normalized_mobile)
-    return await _build_token_response(user.user_id)
+    return await _build_token_response(user.user_id, user.role.value)
 
 
 @router.post("/forgot-password", response_model=OTPResponse)
