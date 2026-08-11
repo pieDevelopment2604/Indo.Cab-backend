@@ -63,16 +63,21 @@ async def _send_otp_internal(mobile_number: str) -> dict:
     }
 
 
-async def _build_token_response(user_id: int, role: str) -> dict:
+async def _build_token_response(user: User) -> dict:
     """Issue a fresh access + refresh token pair and persist the refresh JTI."""
-    access_token = create_access_token(subject=user_id)
-    refresh_token, jti = create_refresh_token(subject=user_id)
-    await RedisService.store_refresh_token(jti=jti, user_id=user_id)
+    access_token = create_access_token(subject=user.user_id)
+    refresh_token, jti = create_refresh_token(subject=user.user_id)
+    await RedisService.store_refresh_token(jti=jti, user_id=user.user_id)
+    
+    username = user.email if user.email else user.mobile_number
+    
     return {
         "token": access_token,
         "refresh_token": refresh_token,
         "token_type": "bearer",
-        "role": role
+        "role": user.role.value,
+        "username": username,
+        "name": f"{user.first_name} {user.last_name}"
     }
 
 
@@ -101,7 +106,7 @@ async def login(credentials: LoginCredentials, db: AsyncSession = Depends(get_db
             detail="User account is inactive or suspended",
         )
 
-    return await _build_token_response(user.user_id, user.role.value)
+    return await _build_token_response(user)
 
 
 @router.post("/refresh", response_model=TokenResponse)
@@ -145,7 +150,7 @@ async def refresh(refresh_data: RefreshTokenRequest, db: AsyncSession = Depends(
             detail="User account is inactive or suspended",
         )
 
-    return await _build_token_response(int(user_id_str), user.role.value)
+    return await _build_token_response(user)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
@@ -205,7 +210,7 @@ async def verify_otp(verify_in: VerifyOTPRequest, db: AsyncSession = Depends(get
         )
 
     await RedisService.delete_otp(normalized_mobile)
-    return await _build_token_response(user.user_id, user.role.value)
+    return await _build_token_response(user)
 
 
 @router.post("/forgot-password", response_model=OTPResponse)

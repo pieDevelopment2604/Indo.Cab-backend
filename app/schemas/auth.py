@@ -5,6 +5,8 @@ class TokenResponse(BaseModel):
     refresh_token: str
     token_type: str = "bearer"
     role: str
+    username: str
+    name: str
 
 class LoginCredentials(BaseModel):
     username: str = Field(..., description="Email or Mobile Number")
