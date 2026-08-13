@@ -29,7 +29,6 @@ class Document(Base):
     vehicle_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("vehicles.id", ondelete="CASCADE"), nullable=True, index=True
     )
-    entity_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False) # Store the actual ID (as UUID, if user_id, it will be casted or stored differently? Wait, schema says entity_id UUID NOT NULL)
 
     document_type: Mapped[str] = mapped_column(String(100), nullable=False)
     document_url: Mapped[str] = mapped_column(String(512), nullable=False)

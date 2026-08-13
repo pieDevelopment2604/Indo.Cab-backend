@@ -113,3 +113,10 @@ class TripLocationHistory(Base):
     speed_kmh: Mapped[float | None] = mapped_column(Numeric(6, 2), nullable=True)
     heading: Mapped[float | None] = mapped_column(Numeric(6, 2), nullable=True)
     recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False, index=True)
+
+    # Append-only high-volume table — suppress Base audit columns
+    updated_at = None
+    created_by = None
+    updated_by = None
+    is_deleted = None
+    deleted_at = None

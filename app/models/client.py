@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import String, Enum, Text, JSON, Integer, Float
+from sqlalchemy import String, Enum, Text, JSON, Integer, Numeric
 from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base_class import Base
 
@@ -23,5 +23,5 @@ class Client(Base):
     address: Mapped[str | None] = mapped_column(Text, nullable=True)
     operating_cities: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
-    discount_percentage: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    discount_percentage: Mapped[float] = mapped_column(Numeric(5, 2), default=0.0, nullable=False)
     status: Mapped[ClientStatus] = mapped_column(Enum(ClientStatus), default=ClientStatus.ACTIVE, nullable=False)

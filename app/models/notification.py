@@ -1,9 +1,9 @@
 import enum
 import uuid
 from datetime import datetime
-from sqlalchemy import String, Enum, ForeignKey, Integer, JSON, Text, DateTime, Boolean
+from sqlalchemy import String, Enum, ForeignKey, Integer, Text, DateTime, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from app.db.base_class import Base
 
 class NotificationChannel(str, enum.Enum):
@@ -31,7 +31,7 @@ class Notification(Base):
     body: Mapped[str] = mapped_column(Text, nullable=False)
     image_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
 
-    data: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    data: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
     
     entity_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
     entity_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
@@ -49,3 +49,7 @@ class PushToken(Base):
     token: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
     platform: Mapped[str] = mapped_column(String(10), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    # Push tokens don't need full audit tracking
+    created_by = None
+    updated_by = None

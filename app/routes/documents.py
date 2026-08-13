@@ -20,32 +20,48 @@ async def upload_document(
 ):
     """
     Upload a document for a USER or VEHICLE entity.
+    - Admins can upload for any user or vehicle.
+    - Vendors/Drivers can only upload for themselves (USER) or their own vehicles (VEHICLE).
     """
-    # For vendors/drivers, they can only upload documents for their own ID
-    if current_user.role.value in ["VENDOR", "DRIVER"] and doc_in.entity_type == DocumentEntity.USER:
-        # We enforce that they cannot upload docs for other users
-        # Note: If entity_type is VEHICLE, we technically should check if they own the vehicle.
-        # For simplicity, we just pass the uploader's user_id as tracking.
-        pass
-
-    return await DocumentService.upload_document(
-        db=db, 
-        doc_in=doc_in, 
-        user_id=current_user.user_id,
-        vehicle_id=doc_in.entity_id if doc_in.entity_type == DocumentEntity.VEHICLE else None
-    )
+    if doc_in.entity_type == DocumentEntity.USER:
+        # Non-admins can only upload documents for their own account
+        if current_user.role.value in ["VENDOR", "DRIVER"] and doc_in.user_id != current_user.user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only upload documents for your own account."
+            )
+        return await DocumentService.upload_document(
+            db=db, doc_in=doc_in,
+            user_id=doc_in.user_id,
+            vehicle_id=None
+        )
+    else:
+        # VEHICLE document — validate ownership for non-admins
+        if current_user.role.value in ["VENDOR", "DRIVER"]:
+            await DocumentService.verify_vehicle_ownership(db, doc_in.vehicle_id, current_user.user_id)
+        return await DocumentService.upload_document(
+            db=db, doc_in=doc_in,
+            user_id=None,
+            vehicle_id=doc_in.vehicle_id
+        )
 
 @router.get("", response_model=List[DocumentResponse])
 async def list_documents(
     entity_type: Optional[DocumentEntity] = None,
-    entity_id: Optional[UUID] = None,
+    status_filter: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(RoleChecker([UserRole.ADMIN]))
+    current_user: User = Depends(RoleChecker([UserRole.ADMIN, UserRole.VENDOR, UserRole.DRIVER]))
 ):
     """
-    List documents. Only Admins can view the document queue broadly.
+    List documents.
+    - Admins see all documents.
+    - Vendors see their own + their vehicles' documents.
+    - Drivers see only their own documents.
     """
-    return await DocumentService.get_documents(db, entity_type, entity_id)
+    return await DocumentService.get_documents(
+        db, entity_type=entity_type, status_filter=status_filter,
+        current_user=current_user
+    )
 
 @router.patch("/{document_id}/status", response_model=DocumentResponse)
 async def update_document_status(

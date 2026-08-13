@@ -88,15 +88,16 @@ class UserService:
 
         if search:
             search_pattern = f"%{search}%"
-            stmt = stmt.where(
-                or_(
-                    User.company_name.ilike(search_pattern),
-                    User.first_name.ilike(search_pattern),
-                    User.last_name.ilike(search_pattern),
-                    User.email.ilike(search_pattern),
-                    User.mobile_number.ilike(search_pattern),
-                )
-            )
+            conditions = [
+                User.company_name.ilike(search_pattern),
+                User.first_name.ilike(search_pattern),
+                User.last_name.ilike(search_pattern),
+                User.email.ilike(search_pattern),
+                User.mobile_number.ilike(search_pattern),
+            ]
+            if search.isdigit():
+                conditions.append(User.user_id == int(search))
+            stmt = stmt.where(or_(*conditions))
 
         stmt = stmt.offset(skip).limit(limit)
         result = await db.execute(stmt)

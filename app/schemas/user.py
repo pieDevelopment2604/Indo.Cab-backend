@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, model_validator
 from datetime import datetime
 from app.models.user import UserRole, UserStatus
 
@@ -67,3 +67,9 @@ class UserResponse(UserBase):
     # Driver fields
     license_number: str | None = None
     vendor_id: int | None = None
+
+    @model_validator(mode="after")
+    def populate_vendor_id(self) -> "UserResponse":
+        if self.role == UserRole.VENDOR:
+            self.vendor_id = self.user_id
+        return self

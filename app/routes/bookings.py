@@ -16,7 +16,7 @@ router = APIRouter(prefix="/bookings", tags=["Bookings"])
 async def create_booking(
     booking_in: BookingCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(RoleChecker([UserRole.ADMIN, UserRole.VENDOR]))
+    current_user: User = Depends(RoleChecker([UserRole.ADMIN]))
 ):
     """
     Create a new booking.
@@ -27,12 +27,12 @@ async def create_booking(
 async def list_bookings(
     status_filter: Optional[BookingStatus] = None,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(RoleChecker([UserRole.ADMIN]))
+    current_user: User = Depends(RoleChecker([UserRole.ADMIN, UserRole.VENDOR]))
 ):
     """
     List all bookings, optionally filtered by status.
     """
-    return await BookingService.get_bookings(db, status_filter)
+    return await BookingService.get_bookings(db, status_filter, current_user)
 
 @router.get("/{booking_id}", response_model=BookingResponse)
 async def get_booking(

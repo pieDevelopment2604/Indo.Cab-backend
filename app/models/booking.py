@@ -1,9 +1,9 @@
 import enum
 import uuid
 from datetime import datetime
-from sqlalchemy import String, Enum, ForeignKey, Integer, Numeric, JSON, SmallInteger, Text, DateTime
+from sqlalchemy import String, Enum, ForeignKey, Integer, Numeric, SmallInteger, Text, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from app.db.base_class import Base
 from app.models.vehicle import VehicleType
 from app.models.pricing import PricingTripType
@@ -68,7 +68,7 @@ class Booking(Base):
     estimated_distance_km: Mapped[float | None] = mapped_column(Numeric(8, 2), nullable=True)
     estimated_duration_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
-    stops: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    stops: Mapped[list] = mapped_column(JSONB, default=list, nullable=False)
 
     passenger_name: Mapped[str] = mapped_column(String(155), nullable=False)
     passenger_phone: Mapped[str] = mapped_column(String(15), nullable=False)

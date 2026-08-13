@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi import HTTPException, status
 from app.models.booking import Booking, BookingStatus
+from app.models.user import User
 from app.schemas.bookings import BookingCreate
 
 class BookingService:
@@ -15,7 +16,7 @@ class BookingService:
         booking = Booking(
             **booking_in.model_dump(),
             booking_number=booking_number,
-            status=BookingStatus.PENDING
+            status=BookingStatus.RECEIVED
         )
         db.add(booking)
         await db.commit()
@@ -23,10 +24,17 @@ class BookingService:
         return booking
 
     @staticmethod
-    async def get_bookings(db: AsyncSession, status_filter: Optional[BookingStatus] = None) -> List[Booking]:
+    async def get_bookings(
+        db: AsyncSession,
+        status_filter: Optional[BookingStatus] = None,
+        current_user: Optional[User] = None
+    ) -> List[Booking]:
         query = select(Booking)
         if status_filter:
             query = query.where(Booking.status == status_filter)
+        # Vendors only see bookings assigned to them
+        if current_user and current_user.role.value == "VENDOR":
+            query = query.where(Booking.assigned_vendor_id == current_user.user_id)
         result = await db.execute(query)
         return result.scalars().all()
 
