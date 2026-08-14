@@ -1,6 +1,6 @@
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.client import Client
+from app.models.client import Client, ClientStatus
 from app.schemas.client import ClientCreate
 from app.core.security import normalize_phone_number
 
