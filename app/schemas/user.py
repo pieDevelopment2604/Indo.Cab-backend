@@ -73,3 +73,34 @@ class UserResponse(UserBase):
         if self.role == UserRole.VENDOR:
             self.vendor_id = self.user_id
         return self
+
+
+class UserProfileUpdate(BaseModel):
+    email: EmailStr | None = None
+    mobile_number: str | None = Field(None, max_length=15)
+    first_name: str | None = Field(None, max_length=100)
+    last_name: str | None = Field(None, max_length=100)
+    profile_image_url: str | None = None
+
+
+class VendorUpdate(BaseModel):
+    email: EmailStr | None = None
+    mobile_number: str | None = Field(None, max_length=15)
+    first_name: str | None = Field(None, max_length=100)
+    last_name: str | None = Field(None, max_length=100)
+    profile_image_url: str | None = None
+    company_name: str | None = Field(None, max_length=255)
+    gst_number: str | None = Field(None, max_length=15)
+    pan_number: str | None = Field(None, max_length=10)
+    address: str | None = None
+    operating_cities: list[str] | None = None
+
+
+class DriverUpdate(BaseModel):
+    email: EmailStr | None = None
+    mobile_number: str | None = Field(None, max_length=15)
+    first_name: str | None = Field(None, max_length=100)
+    last_name: str | None = Field(None, max_length=100)
+    profile_image_url: str | None = None
+    license_number: str | None = Field(None, max_length=50)
+    vendor_id: int | None = Field(None, description="ID of the vendor who owns this driver")

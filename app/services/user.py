@@ -1,4 +1,4 @@
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User, UserRole, UserStatus
 from app.schemas.user import UserCreate
@@ -135,3 +135,32 @@ class UserService:
         stmt = stmt.offset(skip).limit(limit)
         result = await db.execute(stmt)
         return list(result.scalars().all())
+
+    @staticmethod
+    async def update_user(db: AsyncSession, user: User, update_data: dict) -> User:
+        """Update fields dynamically on any User instance."""
+        for field, value in update_data.items():
+            if field == "mobile_number" and value is not None:
+                value = normalize_phone_number(value)
+            setattr(user, field, value)
+        db.add(user)
+        await db.flush()
+        return user
+
+    @staticmethod
+    async def delete_user(db: AsyncSession, user: User) -> None:
+        """Soft delete a user and record deletion time. If Vendor, also soft delete all their drivers."""
+        user.is_deleted = True
+        user.deleted_at = func.now()
+        db.add(user)
+
+        if user.role == UserRole.VENDOR:
+            stmt = select(User).where(User.vendor_id == user.user_id, User.is_deleted == False)
+            result = await db.execute(stmt)
+            drivers = result.scalars().all()
+            for driver in drivers:
+                driver.is_deleted = True
+                driver.deleted_at = func.now()
+                db.add(driver)
+
+        await db.flush()

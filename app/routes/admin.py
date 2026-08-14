@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.models.user import User, UserRole, UserStatus
 from app.routes.dependencies import RoleChecker, get_current_user
-from app.schemas.user import VendorCreate, DriverCreate, UserResponse, UserCreate, UserStatusUpdate
-from app.schemas.client import ClientCreate, ClientResponse
+from app.schemas.user import VendorCreate, DriverCreate, UserResponse, UserCreate, UserStatusUpdate, VendorUpdate, DriverUpdate, UserProfileUpdate
+from app.schemas.client import ClientCreate, ClientResponse, ClientUpdate, ClientStatusUpdate
 from app.services.user import UserService
 from app.services.client import ClientService
 from app.core.security import normalize_phone_number
@@ -198,3 +198,166 @@ async def list_clients(
     db: AsyncSession = Depends(get_db),
 ):
     return await ClientService.list_clients(db, skip=skip, limit=limit)
+
+
+# ---------------------------------------------------------------------------
+# Profile & Account Management Updates
+# ---------------------------------------------------------------------------
+
+@router.put("/vendors/{vendor_id}", response_model=UserResponse)
+async def update_vendor(
+    vendor_id: int,
+    vendor_update: VendorUpdate,
+    current_admin: User = Depends(RoleChecker([UserRole.ADMIN])),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update details of an existing vendor. Only accessible by admins."""
+    vendor = await UserService.get_by_id(db, vendor_id)
+    if not vendor or vendor.role != UserRole.VENDOR:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Vendor not found."
+        )
+    return await UserService.update_user(db, vendor, vendor_update.model_dump(exclude_unset=True))
+
+
+@router.put("/drivers/{driver_id}", response_model=UserResponse)
+async def update_driver(
+    driver_id: int,
+    driver_update: DriverUpdate,
+    current_admin: User = Depends(RoleChecker([UserRole.ADMIN])),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update details of an existing driver. Only accessible by admins."""
+    driver = await UserService.get_by_id(db, driver_id)
+    if not driver or driver.role != UserRole.DRIVER:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Driver not found."
+        )
+    
+    # If vendor_id is changing, validate that the new vendor exists
+    update_dict = driver_update.model_dump(exclude_unset=True)
+    if "vendor_id" in update_dict and update_dict["vendor_id"] is not None:
+        vendor = await UserService.get_by_id(db, update_dict["vendor_id"])
+        if not vendor or vendor.role != UserRole.VENDOR:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY if hasattr(status, 'HTTP_422_UNPROCESSABLE_ENTITY') else status.HTTP_400_BAD_REQUEST,
+                detail="New Vendor ID does not exist."
+            )
+        # Also inherit company_name from vendor for display purposes
+        update_dict["company_name"] = vendor.company_name
+
+    return await UserService.update_user(db, driver, update_dict)
+
+
+@router.put("/profile", response_model=UserResponse)
+async def update_profile(
+    profile_update: UserProfileUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update basic profile details for the currently logged-in user (Admin/Vendor/Driver)."""
+    return await UserService.update_user(db, current_user, profile_update.model_dump(exclude_unset=True))
+
+
+@router.delete("/vendors/{vendor_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_vendor(
+    vendor_id: int,
+    current_admin: User = Depends(RoleChecker([UserRole.ADMIN])),
+    db: AsyncSession = Depends(get_db),
+):
+    """Soft delete an existing vendor and all their drivers. Only accessible by admins."""
+    vendor = await UserService.get_by_id(db, vendor_id)
+    if not vendor or vendor.role != UserRole.VENDOR:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Vendor not found."
+        )
+    await UserService.delete_user(db, vendor)
+
+
+@router.delete("/drivers/{driver_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_driver(
+    driver_id: int,
+    current_admin: User = Depends(RoleChecker([UserRole.ADMIN])),
+    db: AsyncSession = Depends(get_db),
+):
+    """Soft delete an existing driver. Only accessible by admins."""
+    driver = await UserService.get_by_id(db, driver_id)
+    if not driver or driver.role != UserRole.DRIVER:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Driver not found."
+        )
+    await UserService.delete_user(db, driver)
+
+
+# ---------------------------------------------------------------------------
+# Corporate Client Management Updates
+# ---------------------------------------------------------------------------
+
+@router.get("/clients/{client_id}", response_model=ClientResponse)
+async def get_client(
+    client_id: int,
+    current_admin: User = Depends(RoleChecker([UserRole.ADMIN])),
+    db: AsyncSession = Depends(get_db),
+):
+    """Retrieve details of a corporate client. Only accessible by admins."""
+    client = await ClientService.get_by_id(db, client_id)
+    if not client:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Corporate client not found."
+        )
+    return client
+
+
+@router.put("/clients/{client_id}", response_model=ClientResponse)
+async def update_client(
+    client_id: int,
+    client_update: ClientUpdate,
+    current_admin: User = Depends(RoleChecker([UserRole.ADMIN])),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update details of a corporate client. Only accessible by admins."""
+    client = await ClientService.get_by_id(db, client_id)
+    if not client:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Corporate client not found."
+        )
+    return await ClientService.update(db, client, client_update.model_dump(exclude_unset=True))
+
+
+@router.patch("/clients/{client_id}/status", response_model=ClientResponse)
+async def update_client_status(
+    client_id: int,
+    status_update: ClientStatusUpdate,
+    current_admin: User = Depends(RoleChecker([UserRole.ADMIN])),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update status of a corporate client. Only accessible by admins."""
+    client = await ClientService.get_by_id(db, client_id)
+    if not client:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Corporate client not found."
+        )
+    return await ClientService.update_status(db, client, status_update.status)
+
+
+@router.delete("/clients/{client_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_client(
+    client_id: int,
+    current_admin: User = Depends(RoleChecker([UserRole.ADMIN])),
+    db: AsyncSession = Depends(get_db),
+):
+    """Soft delete an existing corporate client. Only accessible by admins."""
+    client = await ClientService.get_by_id(db, client_id)
+    if not client:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Corporate client not found."
+        )
+    await ClientService.delete(db, client)

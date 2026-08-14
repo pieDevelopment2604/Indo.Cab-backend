@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.client import Client
 from app.schemas.client import ClientCreate
@@ -65,3 +65,27 @@ class ClientService:
             .limit(limit)
         )
         return list(result.scalars().all())
+
+    @staticmethod
+    async def update(db: AsyncSession, client: Client, update_data: dict) -> Client:
+        for field, value in update_data.items():
+            if field == "mobile_number" and value is not None:
+                value = normalize_phone_number(value)
+            setattr(client, field, value)
+        db.add(client)
+        await db.flush()
+        return client
+
+    @staticmethod
+    async def update_status(db: AsyncSession, client: Client, status: ClientStatus) -> Client:
+        client.status = status
+        db.add(client)
+        await db.flush()
+        return client
+
+    @staticmethod
+    async def delete(db: AsyncSession, client: Client) -> None:
+        client.is_deleted = True
+        client.deleted_at = func.now()
+        db.add(client)
+        await db.flush()

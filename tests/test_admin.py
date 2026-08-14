@@ -202,3 +202,129 @@ async def test_admin_add_and_list_clients(client: AsyncClient):
     assert list_res.status_code == 200
     clients_list = list_res.json()
     assert len(clients_list) >= 1
+
+
+@pytest.mark.asyncio
+async def test_admin_update_vendor_and_driver(client: AsyncClient):
+    # 1. Login as Admin
+    login_res = await client.post(
+        "/api/v1/auth/login",
+        json={"username": "admin1@indocab.com", "password": "password123", "recaptcha_token": "mock_token"}
+    )
+    assert login_res.status_code == 200
+    token = login_res.json()["token"]
+
+    # 2. Get list of vendors to find one to update
+    vendors_res = await client.get(
+        "/api/v1/admin/vendors",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert vendors_res.status_code == 200
+    vendor_id = vendors_res.json()[0]["user_id"]
+
+    # 3. Update vendor details
+    update_vendor_res = await client.put(
+        f"/api/v1/admin/vendors/{vendor_id}",
+        json={"company_name": "Updated Vendor Travels", "first_name": "UpdatedName"},
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert update_vendor_res.status_code == 200
+    assert update_vendor_res.json()["company_name"] == "Updated Vendor Travels"
+    assert update_vendor_res.json()["first_name"] == "UpdatedName"
+
+    # 4. Get list of drivers to find one to update
+    drivers_res = await client.get(
+        "/api/v1/admin/drivers",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert drivers_res.status_code == 200
+    driver_id = drivers_res.json()[0]["user_id"]
+
+    # 5. Update driver license and name
+    update_driver_res = await client.put(
+        f"/api/v1/admin/drivers/{driver_id}",
+        json={"license_number": "NEW-LIC-12345", "last_name": "UpdatedLastName"},
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert update_driver_res.status_code == 200
+    assert update_driver_res.json()["license_number"] == "NEW-LIC-12345"
+    assert update_driver_res.json()["last_name"] == "UpdatedLastName"
+
+    # 6. Update Admin's own profile details
+    update_profile_res = await client.put(
+        "/api/v1/admin/profile",
+        json={"first_name": "SuperRajesh"},
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert update_profile_res.status_code == 200
+    assert update_profile_res.json()["first_name"] == "SuperRajesh"
+
+
+@pytest.mark.asyncio
+async def test_admin_delete_vendor_and_driver(client: AsyncClient):
+    # 1. Login as Admin
+    login_res = await client.post(
+        "/api/v1/auth/login",
+        json={"username": "admin1@indocab.com", "password": "password123", "recaptcha_token": "mock_token"}
+    )
+    assert login_res.status_code == 200
+    token = login_res.json()["token"]
+
+    # 2. Get list of vendors & drivers
+    vendors_res = await client.get("/api/v1/admin/vendors", headers={"Authorization": f"Bearer {token}"})
+    vendor_id = vendors_res.json()[0]["user_id"]
+
+    drivers_res = await client.get("/api/v1/admin/drivers", headers={"Authorization": f"Bearer {token}"})
+    driver_id = drivers_res.json()[0]["user_id"]
+
+    # 3. Soft-delete the driver
+    del_driver_res = await client.delete(f"/api/v1/admin/drivers/{driver_id}", headers={"Authorization": f"Bearer {token}"})
+    assert del_driver_res.status_code == 204
+
+    # 4. Soft-delete the vendor
+    del_vendor_res = await client.delete(f"/api/v1/admin/vendors/{vendor_id}", headers={"Authorization": f"Bearer {token}"})
+    assert del_vendor_res.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_admin_client_lifecycle(client: AsyncClient):
+    # 1. Login as Admin
+    login_res = await client.post(
+        "/api/v1/auth/login",
+        json={"username": "admin1@indocab.com", "password": "password123", "recaptcha_token": "mock_token"}
+    )
+    assert login_res.status_code == 200
+    token = login_res.json()["token"]
+
+    # 2. Get list of clients to find one
+    clients_res = await client.get("/api/v1/admin/clients", headers={"Authorization": f"Bearer {token}"})
+    assert clients_res.status_code == 200
+    client_id = clients_res.json()[0]["id"]
+
+    # 3. Retrieve single client
+    get_res = await client.get(f"/api/v1/admin/clients/{client_id}", headers={"Authorization": f"Bearer {token}"})
+    assert get_res.status_code == 200
+    assert get_res.json()["id"] == client_id
+
+    # 4. Update client
+    up_res = await client.put(
+        f"/api/v1/admin/clients/{client_id}",
+        json={"company_name": "Updated Corporate Client", "discount_percentage": 12.5},
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert up_res.status_code == 200
+    assert up_res.json()["company_name"] == "Updated Corporate Client"
+    assert up_res.json()["discount_percentage"] == 12.5
+
+    # 5. Update client status
+    status_res = await client.patch(
+        f"/api/v1/admin/clients/{client_id}/status",
+        json={"status": "INACTIVE"},
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert status_res.status_code == 200
+    assert status_res.json()["status"] == "INACTIVE"
+
+    # 6. Soft-delete client
+    del_res = await client.delete(f"/api/v1/admin/clients/{client_id}", headers={"Authorization": f"Bearer {token}"})
+    assert del_res.status_code == 204
