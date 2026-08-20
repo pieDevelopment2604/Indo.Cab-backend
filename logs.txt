@@ -1,0 +1,115 @@
+    self._flush(objects)
+         ~~~~~~~~~~~~~~~~~^^
+    await db.flush()
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 122, in __exit__
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/ext/asyncio/session.py", line 786, in flush
+    raise exc_value.with_traceback(exc_tb)
+    await greenlet_spawn(self.sync_session.flush, objects=objects)
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 4449, in _flush
+    flush_context.execute()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py", line 465, in execute
+    rec.execute(self)
+    ~~~~~~~~~~~^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py", line 641, in execute
+    util.preloaded.orm_persistence.save_obj(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.mapper,
+        ^^^^^^^^^^^^
+        uow.states_for_mapper_hierarchy(self.mapper, False, False),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        uow,
+        ^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py", line 94, in save_obj
+    _emit_insert_statements(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        base_mapper,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        insert,
+        ^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py", line 1234, in _emit_insert_statements
+    result = connection.execute(
+        statement,
+        params,
+        execution_options=execution_options,
+    )
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    return self._exec_single_context(
+    )
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+    ^
+        dialect, context, statement, parameters
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 2365, in _handle_dbapi_exception
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1988, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+    )
+    ^
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 513, in _handle_exception
+    cursor.execute(statement, parameters)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+    value = await result
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 585, in execute
+            ^^^^^^^^^^^^
+    self._adapt_connection.await_(
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 563, in _prepare_and_execute
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self._prepare_and_execute(operation, parameters)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    self._handle_exception(error)
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+DETAIL:  Key (email)=(sam@gmail.com) already exists.
+INFO:     100.64.0.5:20648 - "GET /api/v1/admin/clients/8614 HTTP/1.1" 404 Not Found
+[SQL: INSERT INTO clients (company_name, contact_person, email, mobile_number, gst_number, pan_number, address, operating_cities, discount_percentage, status, created_by, updated_by, is_deleted, deleted_at) VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR, $7::VARCHAR, $8::JSON, $9::NUMERIC(5, 2), $10::clientstatus, $11::INTEGER, $12::INTEGER, $13::BOOLEAN, $14::TIMESTAMP WITH TIME ZONE) RETURNING clients.id, clients.created_at, clients.updated_at]
+    self._adapt_connection._handle_exception(error)
+[parameters: ('google', 'sam', 'sam@gmail.com', '+987546597864', '29ABCDE1234F1Z5', 'ABCDE1234F', 'dasdas', '["Bangalore", "Mumbai"]', 0.0, 'ACTIVE', 1, None, False, None)]
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 797, in _handle_exception
+INFO:     100.64.0.23:47196 - "OPTIONS /api/v1/admin/clients/8614 HTTP/1.1" 200 OK
+    raise translated_error from error
+sqlalchemy.exc.IntegrityError: (sqlalchemy.dialects.postgresql.asyncpg.IntegrityError) <class 'asyncpg.exceptions.UniqueViolationError'>: duplicate key value violates unique constraint "ix_clients_email"

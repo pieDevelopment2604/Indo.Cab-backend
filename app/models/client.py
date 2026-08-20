@@ -5,6 +5,7 @@ from app.db.base_class import Base
 
 class ClientStatus(str, enum.Enum):
     ACTIVE = "ACTIVE"
+    SUSPENDED = "SUSPENDED"
     INACTIVE = "INACTIVE"
 
 class Client(Base):

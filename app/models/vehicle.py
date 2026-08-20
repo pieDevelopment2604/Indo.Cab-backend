@@ -1,6 +1,7 @@
 import enum
 import uuid
-from sqlalchemy import String, Enum, ForeignKey, Integer, SmallInteger
+from datetime import date
+from sqlalchemy import String, Enum, ForeignKey, Integer, SmallInteger, Date
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
 from app.db.base_class import Base
@@ -17,6 +18,13 @@ class VehicleStatus(str, enum.Enum):
     ACTIVE = "ACTIVE"
     INACTIVE = "INACTIVE"
     SUSPENDED = "SUSPENDED"
+
+class FuelType(str, enum.Enum):
+    PETROL = "PETROL"
+    DIESEL = "DIESEL"
+    CNG = "CNG"
+    ELECTRIC = "ELECTRIC"
+    HYBRID = "HYBRID"
 
 class Vehicle(Base):
     __tablename__ = "vehicles"
@@ -39,3 +47,19 @@ class Vehicle(Base):
     color: Mapped[str] = mapped_column(String(50), nullable=False)
     year_of_manufacture: Mapped[int | None] = mapped_column(Integer, nullable=True)
     seating_capacity: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
+    
+    fuel_type: Mapped[FuelType | None] = mapped_column(Enum(FuelType), nullable=True)
+    engine_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    chassis_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
+    rc_valid_upto: Mapped[date | None] = mapped_column(Date, nullable=True)
+    puc_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    puc_valid_upto: Mapped[date | None] = mapped_column(Date, nullable=True)
+    insurance_policy_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    insurance_valid_upto: Mapped[date | None] = mapped_column(Date, nullable=True)
+    permit_type_and_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    permit_valid_upto: Mapped[date | None] = mapped_column(Date, nullable=True)
+    fitness_cert_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    fitness_valid_upto: Mapped[date | None] = mapped_column(Date, nullable=True)
+    fastag_barcode: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    road_tax_paid_upto: Mapped[date | None] = mapped_column(Date, nullable=True)
