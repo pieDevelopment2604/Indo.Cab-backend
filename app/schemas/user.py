@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field, ConfigDict, model_validator
-from datetime import datetime
+from datetime import datetime, date
+from uuid import UUID
 from app.models.user import UserRole, UserStatus
 
 
@@ -43,6 +44,20 @@ class DriverCreate(UserBase):
     password: str = Field(..., min_length=6, max_length=100)
     license_number: str = Field(..., max_length=50)
     vendor_id: int = Field(..., description="ID of the vendor who owns this driver")
+    
+    aadhaar_number: str | None = None
+    blood_group: str | None = None
+    date_of_birth: date | None = None
+    dl_expiry: date | None = None
+    dl_type: str | None = None
+    experience_years: int | None = None
+    hub: str | None = None
+    address: str | None = None
+    city: str | None = None
+    state: str | None = None
+    pincode: str | None = None
+    pan_number: str | None = None
+    assigned_vehicle_id: UUID | None = None
 
 
 class UserStatusUpdate(BaseModel):
@@ -67,6 +82,17 @@ class UserResponse(UserBase):
     # Driver fields
     license_number: str | None = None
     vendor_id: int | None = None
+    aadhaar_number: str | None = None
+    blood_group: str | None = None
+    date_of_birth: date | None = None
+    dl_expiry: date | None = None
+    dl_type: str | None = None
+    experience_years: int | None = None
+    hub: str | None = None
+    city: str | None = None
+    state: str | None = None
+    pincode: str | None = None
+    assigned_vehicle_id: UUID | None = None
 
     @model_validator(mode="after")
     def populate_vendor_id(self) -> "UserResponse":
@@ -104,3 +130,17 @@ class DriverUpdate(BaseModel):
     profile_image_url: str | None = None
     license_number: str | None = Field(None, max_length=50)
     vendor_id: int | None = Field(None, description="ID of the vendor who owns this driver")
+    
+    aadhaar_number: str | None = None
+    blood_group: str | None = None
+    date_of_birth: date | None = None
+    dl_expiry: date | None = None
+    dl_type: str | None = None
+    experience_years: int | None = None
+    hub: str | None = None
+    address: str | None = None
+    city: str | None = None
+    state: str | None = None
+    pincode: str | None = None
+    pan_number: str | None = None
+    assigned_vehicle_id: UUID | None = None

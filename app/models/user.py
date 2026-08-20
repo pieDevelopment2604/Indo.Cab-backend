@@ -1,6 +1,9 @@
 import enum
-from sqlalchemy import String, Enum, Text, JSON, Integer, ForeignKey
+import uuid
+from datetime import date
+from sqlalchemy import String, Enum, Text, JSON, Integer, ForeignKey, Date
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import UUID
 from app.db.base_class import Base
 
 
@@ -55,4 +58,20 @@ class User(Base):
         ForeignKey("users.user_id", ondelete="SET NULL"),
         nullable=True,
         index=True,
+    )
+    
+    # Extra Driver Profile Fields
+    aadhaar_number: Mapped[str | None] = mapped_column(String(20), unique=True, nullable=True)
+    blood_group: Mapped[str | None] = mapped_column(String(5), nullable=True)
+    date_of_birth: Mapped[Date | None] = mapped_column(Date, nullable=True)
+    dl_expiry: Mapped[Date | None] = mapped_column(Date, nullable=True)
+    dl_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    experience_years: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    hub: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    city: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    state: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    pincode: Mapped[str | None] = mapped_column(String(10), nullable=True)
+
+    assigned_vehicle_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("vehicles.id", ondelete="SET NULL"), nullable=True, index=True
     )
